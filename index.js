@@ -1,12 +1,12 @@
-var express = require('express');
-var app = express();
-var http = require('http').Server(app);
-var io = require('socket.io')(http);
+const express = require('express');
+const app = express();
+const path = require('path');
+const http = require('http').Server(app);
+const io = require('socket.io')(http);
 
-app.use(express.static('./'));
+app.use(express.static(path.join('dist/ChatApplicaton')));
 
-var server = http.listen(3000,function() {
-  var host = server.address().address;
-  var port = server.address().port;
-  console.log("Server listening on: "+ host + " port: " + port);
+require('./socket.js')(app, io);
+http.listen(3000,() => {
+  console.log("Server Started...");
 });
