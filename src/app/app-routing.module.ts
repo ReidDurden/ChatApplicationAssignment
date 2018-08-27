@@ -2,11 +2,13 @@ import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
 import { LoginComponent } from './login/login.component';
 import { ChatComponent } from './chat/chat.component';
+import { PageNotFoundComponent } from './page-not-found/page-not-found.component';
 
 const routes: Routes = [
   {path:'login', component:LoginComponent},
   {path:'chat', component:ChatComponent},
-  {path:'**', redirectTo:'login'},
+  {path:'Error 404:Page Not Found', component:PageNotFoundComponent},
+  {path:'**', redirectTo:'Error 404:Page Not Found'},
 ];
 
 @NgModule({
