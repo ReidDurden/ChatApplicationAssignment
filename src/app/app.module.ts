@@ -3,7 +3,7 @@ import { NgModule } from '@angular/core';
 
 import { AppRoutingModule } from './app-routing.module';
 import { FormsModule } from '@angular/forms';
-import { HttpModule } from '@angular/http';
+import { HttpClientModule } from '@angular/common/http';
 import { SocketService } from './socket.service';
 
 import { AppComponent } from './app.component';
@@ -22,7 +22,7 @@ import { PageNotFoundComponent } from './page-not-found/page-not-found.component
     BrowserModule,
     AppRoutingModule,
     FormsModule,
-    HttpModule
+    HttpClientModule,
   ],
   providers: [SocketService],
   bootstrap: [AppComponent]
