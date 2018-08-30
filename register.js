@@ -1,7 +1,7 @@
 module.exports = function(app,fs) {
 
   app.post('/register', (req, res) => {
-    console.log("entered");
+
     var isUser = 0;
     var userObj;
     var uname = req.body.username;

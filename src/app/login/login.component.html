@@ -5,8 +5,15 @@
   </ul>
 </nav>
 
+
 <form (submit)="userLogin($event)">
   <input type="username" placeholder="Username" [(ngModel)]='username' name="username" id="username">
-  <input type="email" placeholder="email" [(ngModel)]='email' name="email" id="email">
   <button type="submit">Login</button>
+</form>
+<p>Dont have an account? Register Below!</p>
+
+<form (submit)="userRegister($event)">
+  <input type="username" placeholder="Username" [(ngModel)]='RegUsername' name="gusername" id="RegUsername">
+  <input type="email" placeholder="email" [(ngModel)]='email' name="email" id="email">
+  <button type="submit">Register</button>
 </form>

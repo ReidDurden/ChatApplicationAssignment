@@ -17,8 +17,8 @@ import * as $ from 'jquery';
 export class LoginComponent implements OnInit {
 
 username:string = '';
+RegUsername:string = '';
 email:string = '';
-
 
   constructor(private router:Router, private form:FormsModule, private http:HttpClient) { }
 
@@ -27,14 +27,39 @@ email:string = '';
 
   userLogin(event) {
     event.preventDefault();
-    /*this.register(this.username, this.email).subscribe(
-      data=>{
-        //Do Something
-        console.log("Registered Successfully");
-      },
-      error =>{ alert("Registration Failed"); }
-    )
-    */
+    var dataStuff = {username:this.username};
+    const that = this;
+
+    $(document).ready(function() {
+    $.ajax({
+      type:"POST",
+      contentType:"application/json",
+      url:"/auth",
+      data:JSON.stringify(dataStuff),
+      datatype:"JSON",
+      success:function(userInfo){
+        if(userInfo.exists) {
+          //console.log(userInfo);
+          alert("Logged In!");
+          localStorage.setItem("userInfo", JSON.stringify(userInfo));
+          console.log(userInfo);
+          that.router.navigate(['chat']);
+
+        } else {
+        //console.log(this.loginSuccess + "FailCall");
+        alert("Please Check Your Username.");
+
+        }
+    },
+      error:function(e){alert("Authentication Failed")},
+    });
+
+  });
+  }
+
+
+  userRegister(event) {
+    event.preventDefault();
     var dataStuff = {username:this.username, email:this.email};
 
     $(document).ready(function() {
@@ -46,18 +71,16 @@ email:string = '';
       datatype:"JSON",
       success:function(userInfo){
         if(userInfo) {
-          alert("Registered");
+          alert("You've been registered!");
         } else {
-          alert("Not Registered");
+        alert("Sorry! Looks like that username is already taken! Or maybe our register system just failed..");
+
         }
     },
-      error:function(e){alert("failure")},
+      error:function(e){alert("Registration Failed")},
     });
   });
   }
 
-  register(newUsername:string, newEmail:string){
-    return this.http.post('/register',{username:newUsername});
-  }
 
 }

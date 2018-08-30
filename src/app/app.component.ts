@@ -9,4 +9,12 @@ import { SocketService } from './socket.service';
 export class AppComponent {
   title = 'ChatApplicaton';
   constructor(socketService:SocketService) {}
+
+  ngOnInit() {
+    if(typeof(Storage) != "undefined") {
+      console.log("Storage Ready");
+    } else {
+      console.log("Storage Failed to Initialize");
+    }
+  }
 }

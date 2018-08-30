@@ -1,1 +1,1 @@
-[{"name":"super","email":"super@email.com","permissions":3}]
+[{"name":"super","email":"super@email.com","permissions":3},{"name":"group","email":"group@email.com","permissions":2},{"name":"normal","email":"normal@email.com","permissions":1}]

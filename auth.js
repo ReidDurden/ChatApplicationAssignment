@@ -10,21 +10,21 @@ module.exports = function(app,fs) {
       if(err) {
 
         console.log(err);
-        res.send('Failed to read from file');
 
       } else {
 
         userObj = JSON.parse(data);
+        userObj.exists = false;
         for(let i = 0;i < userObj.length;i++){
           if(userObj[i].name == uname) {
-            res.send(userObj[i].name + " is a user!");
+            userObj[i].exists = true;
+            res.send(userObj[i]);
             return;
           }
         }
       }
 
-      res.send("Please check to make sure that you entered the correct username.");
-
+      res.send(userObj.exists);
     });
   });
 }

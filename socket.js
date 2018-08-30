@@ -12,4 +12,10 @@ module.exports = function(app, io) {
       io.emit('message',{type:'message',text:message});
     })
   });
+
+  var groups = ''; //Namespaces
+  var channels = ''; // Rooms
+
+  
+
 }
