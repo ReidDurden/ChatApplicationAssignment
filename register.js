@@ -30,7 +30,7 @@ module.exports = function(app,fs) {
           console.log("The user registration failed");
 
         } else {
-          userObj.push({"name":uname,"email":uemail, "permissions":1});
+          userObj.push({"name":uname,"email":uemail, "permissions":1, "groups":["global"]});
           var newData = JSON.stringify(userObj);
 
           fs.writeFile('authdata.json', newData, 'utf-8', function(err) {

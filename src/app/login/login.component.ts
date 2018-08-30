@@ -7,6 +7,7 @@ import { map } from 'rxjs/operators';
 import * as $ from 'jquery';
 
 
+
 @Component({
   selector: 'app-login',
   templateUrl: './login.component.html',
@@ -20,7 +21,7 @@ username:string = '';
 RegUsername:string = '';
 email:string = '';
 
-  constructor(private router:Router, private form:FormsModule, private http:HttpClient) { }
+  constructor(private router:Router, private form:FormsModule, private http:HttpClient) {  }
 
   ngOnInit() {
   }

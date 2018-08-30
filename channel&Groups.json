@@ -1,1 +1,2 @@
-[{"group":"default","users":"super,group,normal"}]
+[{"gName":"global", "channels": ["defaultChannel", "sideChannel"], "admins":["super", "group"]},
+ {"gName":"side", "channels":["sideChat", "localChat"], "admins": ["super", "group"]}]

@@ -3,6 +3,8 @@
 </p>
 
 <div id="linksAndLogout">
+  <button (click)="joinRoom()">Change room</button>
+  <button (click)="newRoom()">Make a new room</button>
 
 </div>
 
@@ -15,5 +17,9 @@
 </div>
 
 <div id="chatArea">
-
+  <div *ngFor="let message of messages">
+    {{ message.text}}
+  </div>
+  <input [(ngModel)]="message" type="text" placeholder="Enter message here" id="message" name="message" />
+  <button (click)="sendMessage(message)">Send</button>
 </div>
