@@ -1,3 +1,1 @@
-[{"name":"super","email":"super@email.com","permissions":3, "groups":["global", "side"]},
-{"name":"group","email":"group@email.com","permissions":2, "groups":["global"]},
-{"name":"normal","email":"normal@email.com","permissions":1, "groups":["global"]}]
+[{"name":"super","email":"super@email.com","permissions":3,"groups":["global","side","newGroup"]},{"name":"group","email":"group@email.com","permissions":2,"groups":["global"]},{"name":"normal","email":"normal@email.com","permissions":1,"groups":["global"]}]

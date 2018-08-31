@@ -35,6 +35,10 @@ export class SocketService {
     this.socket.emit('join-room', room);
   }
 
+  newRoom(roomname, group) {
+    this.socket.emit('new-room', roomname, group);
+  }
+
 
 
 
