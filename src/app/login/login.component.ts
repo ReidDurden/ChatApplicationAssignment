@@ -40,14 +40,11 @@ email:string = '';
       datatype:"JSON",
       success:function(userInfo){
         if(userInfo.exists) {
-          //console.log(userInfo);
           alert("Logged In!");
-          localStorage.setItem("userInfo", JSON.stringify(userInfo));
-          console.log(userInfo);
+          sessionStorage.setItem("userInfo", JSON.stringify(userInfo));
           that.router.navigate(['chat']);
 
         } else {
-        //console.log(this.loginSuccess + "FailCall");
         alert("Please Check Your Username.");
 
         }

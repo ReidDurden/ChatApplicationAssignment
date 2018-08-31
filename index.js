@@ -230,6 +230,100 @@ app.post('/removeUserFromGroup', function(req, res) {
   });
 })
 
+app.post('/removeUser', function(req, res) {
+  var user = req.body.user;
+  fs.readFile('authdata.json', 'utf-8', function(err,data) {
+    var userData;
+    if(err) {
+      console.log(err);
+    } else {
+      userData = JSON.parse(data);
+
+      for(let i = 0; i < userData.length; i++){
+        if(userData[i].name == user){
+          userData.splice(i, 1);
+        }
+      }
+      var newData = JSON.stringify(userData);
+      fs.writeFile('authdata.json', newData, 'utf-8', function(err) {
+        if(err) throw err;
+        res.send(true);
+      });
+    }
+  });
+})
+
+
+  app.post('/setGroupAdmin', function(req, res) {
+    var user = req.body.user;
+    var group = req.body.group;
+
+    fs.readFile('channel&Groups.json', 'utf-8', function(err,data) {
+      var groupData;
+      if(err) {
+        console.log(err);
+      } else {
+        groupData = JSON.parse(data);
+
+        for(let i = 0; i < groupData.length; i++) {
+          if(groupData[i].gName == group) {
+            groupData[i].admins.push(user);
+          }
+        }
+        var newData = JSON.stringify(groupData);
+        fs.writeFile('channel&Groups.json', newData,'utf-8', function(err, data) {
+          if(err) throw err;
+          //res.send(true);
+        });
+        fs.readFile('authdata.json', 'utf-8', function(err,data) {
+          var userData;
+          if(err) {
+            console.log(err);
+          } else {
+            userData = JSON.parse(data);
+
+            for (let i = 0; i < userData.length; i++) {
+              if(userData[i].name == user) {
+                if(userData[i].permissions !== 3) {
+                  userData[i].permissions = 2;
+                }
+              }
+            }
+            var newData = JSON.stringify(userData);
+            fs.writeFile('authdata.json', newData, 'utf-8', function(err, data) {
+              if(err) throw err;
+              res.send(true);
+            })
+          }
+        })
+      }
+    })
+  })
+
+  app.post('/setAdmin',function(req, res) {
+    var user = req.body.user;
+
+    fs.readFile('authdata.json', "utf-8", function(err,data) {
+      var userData;
+      if(err) {
+        console.log(err);
+      } else {
+        userData = JSON.parse(data);
+
+        for(let i = 0; i < userData.length; i++) {
+          if(userData[i].name == user) {
+            userData[i].permissions = 3;
+          }
+        }
+        var newData = JSON.stringify(userData);
+        fs.writeFile('authdata.json', newData, 'utf-8', function(err, data) {
+          if(err) throw err;
+          res.send(true);
+        })
+      }
+    })
+  })
+
 //NO GO ZONE
 http.listen(3000,() => {
   console.log("Server Started...");

@@ -17,32 +17,49 @@ export class ChatComponent implements OnInit {
   constructor(private router:Router, private form:FormsModule, private http:HttpClient, private sockServ:SocketService) { }
 
   username:string = '';
-  userData = JSON.parse(localStorage.getItem("userInfo"));
-  groups = this.userData.groups;
+  userData;
+  groups;
   channels;
   messages = [];
   message;
   connection;
   currentGroup;
+  isNorm = false;
+  isGroupAdmin = false;
+  isSuperAdmin = false;
 
 
   ngOnInit() {
-  //  var dataStuff = {username:this.username};
 
-    if(localStorage.getItem("userInfo")) {
-
+    if(sessionStorage.getItem("userInfo")) {
+      this.userData = JSON.parse(sessionStorage.getItem("userInfo"));
+      this.groups = this.userData.groups;
       const that = this;
-      console.log(this.userData);
       this.username = this.userData.name;
       var groupSend = {groupName: this.groups[0]}
       this.currentGroup = this.groups[0];
-      console.log(groupSend);
+
+      if(this.userData.permissions == 1) {
+        this.isNorm = true;
+        this.isGroupAdmin = false;
+        this.isSuperAdmin = false;
+      } else if(this.userData.permissions == 2) {
+        this.isNorm = false;
+        this.isGroupAdmin = true;
+        this.isSuperAdmin = false;
+      } else if(this.userData.permissions == 3) {
+        this.isNorm = false;
+        this.isGroupAdmin = false;
+        this.isSuperAdmin = true;
+      }
 
 
       this.connection = this.sockServ.getMessages().subscribe(message=> {
         this.messages.push(message);
         this.message = '';
+
       });
+
       $(document).ready(function() {
       $.ajax({
         type:"POST",
@@ -51,15 +68,11 @@ export class ChatComponent implements OnInit {
         data:JSON.stringify(groupSend),
         datatype:"JSON",
         success:function(groupInfo){
-          console.log(groupInfo)
           if(groupInfo) {
             that.channels = groupInfo.channels;
-            alert("Channels updated!");
-            console.log(that.channels);
-            console.log(that.groups);
+            that.changeRoom(that.channels[0]);
 
           } else {
-          //console.log(this.loginSuccess + "FailCall");
           alert("Channels was not updated, the group may not exist.");
 
           }
@@ -90,7 +103,6 @@ export class ChatComponent implements OnInit {
   }
 
   changeGroup(name){
-    console.log(name);
     const that = this;
     var newGroup = {group:name};
     that.currentGroup = name;
@@ -102,14 +114,10 @@ export class ChatComponent implements OnInit {
       data:JSON.stringify(newGroup),
       datatype:"JSON",
       success:function(groupInfo){
-        console.log(groupInfo)
         if(groupInfo) {
           that.channels = groupInfo.channels;
-          alert("Channels updated!");
-          console.log(that.channels);
 
         } else {
-        //console.log(this.loginSuccess + "FailCall");
         alert("Channels was not updated, the group may not exist.");
 
         }
@@ -121,7 +129,7 @@ export class ChatComponent implements OnInit {
   }
 
   logout(){
-    localStorage.clear();
+    sessionStorage.clear();
     this.router.navigate(['login']);
   }
 
@@ -137,11 +145,9 @@ export class ChatComponent implements OnInit {
       data:JSON.stringify(newRoom),
       datatype:"JSON",
       success:function(newRoom){
-        console.log(newRoom)
         if(newRoom) {
           that.channels.push(newRoom);
           alert("New Room created!");
-          console.log(that.channels);
 
         } else {
         alert("The new room was not created.");
@@ -165,11 +171,9 @@ export class ChatComponent implements OnInit {
       data:JSON.stringify(newGroup),
       datatype:"JSON",
       success:function(group){
-        console.log(group)
         if(group) {
           that.groups.push(group);
           alert("New Group created!");
-          console.log(that.groups);
 
         } else {
         alert("The new group was not created.");
@@ -193,7 +197,6 @@ export class ChatComponent implements OnInit {
       data:JSON.stringify(details),
       datatype:"JSON",
       success:function(conf){
-        console.log(conf)
         if(conf) {
           alert("User was added to the group");
 
@@ -219,7 +222,6 @@ export class ChatComponent implements OnInit {
       data:JSON.stringify(details),
       datatype:"JSON",
       success:function(conf){
-        console.log(conf)
         if(conf) {
           alert("User was removed from the group");
 
@@ -260,7 +262,7 @@ export class ChatComponent implements OnInit {
 
   removeAUser(){
     event.preventDefault();
-    var dataStuff = {username:prompt("Which user would you like to remove for good?")};
+    var dataStuff = {user:prompt("Which user would you like to remove for good?")};
 
     $(document).ready(function() {
     $.ajax({
@@ -282,6 +284,53 @@ export class ChatComponent implements OnInit {
   });
   }
 
+  setGroupAdmin(){
+    event.preventDefault();
+    var dataStuff = {user:prompt("Which user would you like to become a group admin?"), group:this.currentGroup};
 
-//HERE IS THE NO GO ZONE
+    $(document).ready(function() {
+    $.ajax({
+      type:"POST",
+      contentType:"application/json",
+      url:"/setGroupAdmin",
+      data:JSON.stringify(dataStuff),
+      datatype:"JSON",
+      success:function(conf){
+        if(conf) {
+          alert("The user is now an Admin of this group");
+        } else {
+        alert("Sorry! That user might not exist");
+
+        }
+    },
+      error:function(e){alert("Group Admin Set Failed")},
+    });
+  });
+  }
+
+  setAdmin(){
+    event.preventDefault();
+    var dataStuff = {user:prompt("Which user would you like to promote to a super admin?")};
+
+    $(document).ready(function() {
+    $.ajax({
+      type:"POST",
+      contentType:"application/json",
+      url:"/setAdmin",
+      data:JSON.stringify(dataStuff),
+      datatype:"JSON",
+      success:function(conf){
+        if(conf) {
+          alert("The user is now an super admin");
+        } else {
+        alert("Sorry! That user doesn't exist");
+
+        }
+    },
+      error:function(e){alert("Super Admin Set Failed")},
+    });
+  });
+
+  }
+
 }

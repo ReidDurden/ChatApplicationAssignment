@@ -1,14 +1,36 @@
 <div id="linksAndLogout">
-  <button (click)="newRoom()">Make a new room</button><!--COMPLETED-->
-  <button (click)="newGroup()">Create a new group</button><!--COMPLETED-->
-  <button (click)="addToGroup()">Add user to current group</button><!--COMPLETED-->
-  <button (click)="removeUserFromGroup()">Remove a user form a group</button><!--COMPLETED-->
-  <button (click)="createNewUser()">Register a new user</button><!--COMPLETED-->
-  <button (click)="removeAUser()">Remove a user</button><!---->
-  <button (click)="setGroupAdmin()">Promote to admin</button><!---->
-  <button (click)="setAdmin()">Promote to admin</button><!---->
 
-  <button (click)="logout()">Logout</button><!--COMPLETED-->
+  <div *ngIf="isNorm">
+    <p>Permissions: None</p>
+    <button (click)="logout()">Logout</button><!--COMPLETED-->
+
+  </div>
+
+  <div *ngIf="isGroupAdmin">
+    <p>Permissions: Group Admin</p>
+    <button (click)="newRoom()">Make a new room</button><!--COMPLETED-->
+    <button (click)="newGroup()">Create a new group</button><!--COMPLETED-->
+    <button (click)="addToGroup()">Add user to current group</button><!--COMPLETED-->
+    <button (click)="removeUserFromGroup()">Remove a user form a group</button><!--COMPLETED-->
+    <button (click)="createNewUser()">Register a new user</button><!--COMPLETED-->
+    <button (click)="setGroupAdmin()">Promote to Group admin</button><!--COMPLETED-->
+    <button (click)="logout()">Logout</button><!--COMPLETED-->
+
+  </div>
+
+  <div *ngIf="isSuperAdmin">
+    <p>Permissions: Super Admin<p>
+    <button (click)="newRoom()">Make a new room</button><!--COMPLETED-->
+    <button (click)="newGroup()">Create a new group</button><!--COMPLETED-->
+    <button (click)="addToGroup()">Add user to current group</button><!--COMPLETED-->
+    <button (click)="removeUserFromGroup()">Remove a user form a group</button><!--COMPLETED-->
+    <button (click)="createNewUser()">Register a new user</button><!--COMPLETED-->
+    <button (click)="removeAUser()">Remove a user</button><!--COMPLETED-->
+    <button (click)="setGroupAdmin()">Promote to Group admin</button><!--COMPLETED-->
+    <button (click)="setAdmin()">Promote to admin</button><!--COMPLETED-->
+    <button (click)="logout()">Logout</button><!--COMPLETED-->
+
+  </div>
 
 </div>
 
