@@ -333,4 +333,67 @@ export class ChatComponent implements OnInit {
 
   }
 
+  removeGroup(){
+    event.preventDefault();
+    const that = this;
+    var dataStuff = {group:prompt("Which group would you like to remove?")};
+
+    $(document).ready(function() {
+    $.ajax({
+      type:"POST",
+      contentType:"application/json",
+      url:"/removeGroup",
+      data:JSON.stringify(dataStuff),
+      datatype:"JSON",
+      success:function(conf){
+        if(conf) {
+          for(let i = 0; i < that.groups.length; i++) {
+            if(that.groups[i] == dataStuff.group) {
+              that.groups.splice(i, 1);
+              return;
+            }
+          }
+          alert("The group has been removed!");
+        } else {
+        alert("Sorry! That group might not exist");
+
+        }
+    },
+      error:function(e){alert("Group Removal Failed")},
+    });
+  });
+
+  }
+
+  removeChannel(){
+    event.preventDefault();
+    const that = this;
+    var dataStuff = {group: this.currentGroup, channel:prompt("Which channel would you like to remove? (Note, you must be in the group that the channel you want to remove is in!)")};
+
+    $(document).ready(function() {
+    $.ajax({
+      type:"POST",
+      contentType:"application/json",
+      url:"/removeChannel",
+      data:JSON.stringify(dataStuff),
+      datatype:"JSON",
+      success:function(conf){
+        if(conf) {
+          for(let i = 0; i < that.channels.length; i++) {
+            if(that.channels[i] == dataStuff.channel) {
+              that.channels.splice(i, 1);
+              return;
+            }
+          }
+          alert("The channel has been removed!");
+        } else {
+        alert("Sorry! That channel might not exist");
+
+        }
+    },
+      error:function(e){alert("Channel Removal Failed")},
+    });
+  });
+  }
+
 }

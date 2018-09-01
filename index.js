@@ -324,6 +324,84 @@ app.post('/removeUser', function(req, res) {
     })
   })
 
+  app.post('/removeGroup', function(req, res) {
+    var group = req.body.group;
+
+    fs.readFile('channel&Groups.json', 'utf-8', function(err,data) {
+      var groupData;
+      if(err) {
+        console.log(err);
+      } else {
+        groupData = JSON.parse(data);
+
+        for(let i = 0; i < groupData.length; i++) {
+          if(groupData[i].gName == group) {
+            groupData.splice(i, 1);
+          }
+        }
+        var newData = JSON.stringify(groupData);
+        fs.writeFile('channel&Groups.json', newData, 'utf-8', function(err, data) {
+          if(err) throw err;
+          //res.send(true);
+        })
+      }
+    })
+    fs.readFile('authdata.json', 'utf-8', function(err,data) {
+      var userData;
+      if(err) {
+        console.log(err);
+      } else {
+        userData = JSON.parse(data);
+
+        for(let i = 0; i < userData.length; i++) {
+          var userGroups = userData[i];
+          for(let c = 0; c < userGroups.groups.length; c++) {
+            if(userGroups.groups[c] == group){
+              userGroups.groups.splice(c, 1);
+              userData[i] = userGroups;
+            }
+          }
+        }
+        var newData = JSON.stringify(userData);
+        fs.writeFile('authdata.json', newData, 'utf-8', function(err,data) {
+          if(err) throw err;
+          res.send(true);
+        })
+
+      }
+    })
+  })
+
+  app.post('/removeChannel', function(req, res) {
+    var group = req.body.group;
+    var channel = req.body.channel;
+
+    fs.readFile('channel&Groups.json', 'utf-8', function(err, data) {
+      var groupInfo;
+      if(err) {
+        console.log(err);
+      } else {
+        groupData = JSON.parse(data);
+        for(let i = 0; i < groupData.length; i++) {
+          if(groupData[i].gName == group){
+            var chGroup = groupData[i];
+            for(let c = 0; i < chGroup.channels.length; c++) {
+              if(chGroup.channels[c] == channel){
+                chGroup.channels.splice(c, 1);
+                groupData[i] = chGroup;
+              }
+            }
+          }
+        }
+        var newData = JSON.stringify(groupData);
+        fs.writeFile('channel&Groups.json', newData, 'utf-8', function(err, data) {
+          if(err) throw err;
+          res.send(true);
+        })
+      }
+    })
+  })
+
 //NO GO ZONE
 http.listen(3000,() => {
   console.log("Server Started...");
