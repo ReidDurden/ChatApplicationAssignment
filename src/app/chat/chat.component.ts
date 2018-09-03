@@ -16,19 +16,20 @@ export class ChatComponent implements OnInit {
 
   constructor(private router:Router, private form:FormsModule, private http:HttpClient, private sockServ:SocketService) { }
 
-  username:string = '';
-  userData;
-  groups;
-  channels;
-  messages = [];
-  message;
-  connection;
-  currentGroup;
+  username:string = ''; //Current user's username
+  userData; //User data stored
+  groups; //Users groups stored
+  channels; //Users Channels stored
+  messages = []; //Messages being sent, (NOTAPPLICABLE)
+  message; //NOTAPPLICABLE
+  connection; //Storage for the socket.io connection
+  currentGroup; //Group the user is currently in
   isNorm = false;
-  isGroupAdmin = false;
+  isGroupAdmin = false;    //Various user permissions
   isSuperAdmin = false;
 
-
+//Retrieves the users data and aquires all of the information that the page
+//needs to display
   ngOnInit() {
 
     if(sessionStorage.getItem("userInfo")) {
@@ -39,6 +40,7 @@ export class ChatComponent implements OnInit {
       var groupSend = {groupName: this.groups[0]}
       this.currentGroup = this.groups[0];
 
+//Sets the users level of permissons
       if(this.userData.permissions == 1) {
         this.isNorm = true;
         this.isGroupAdmin = false;
@@ -53,13 +55,13 @@ export class ChatComponent implements OnInit {
         this.isSuperAdmin = true;
       }
 
-
+//Estabilish connection to socket.io service
       this.connection = this.sockServ.getMessages().subscribe(message=> {
         this.messages.push(message);
         this.message = '';
 
       });
-
+//Get channels
       $(document).ready(function() {
       $.ajax({
         type:"POST",
@@ -88,20 +90,25 @@ export class ChatComponent implements OnInit {
     }
   }
 
+//Send message through socket.io
   sendMessage(){
     this.sockServ.sendMessage('['+ this.username +']' + this.message);
   }
 
+//Uses socket.io to change the room the user is emiting to
   changeRoom(room){
     this.sockServ.joinRoom(room);
   }
 
+//Closes the connection when the user leaves the page
   ngOnDestroy(){
     if(this.connection){
       this.connection.unsubscribe();
     }
   }
 
+//Retrieves the group information for a specifed group from the SERVER
+// and then chnages the user current group.
   changeGroup(name){
     const that = this;
     var newGroup = {group:name};
@@ -128,12 +135,14 @@ export class ChatComponent implements OnInit {
   });
   }
 
+//Logs out the user by clearing local data and then returning them to
+// the login screen
   logout(){
     sessionStorage.clear();
     this.router.navigate(['login']);
   }
 
-
+//Sends a request to the server to create a new room in the current channel
   newRoom() {
     const that = this;
     var newRoom = {newRoom:prompt("New room name?"), curGroup: this.currentGroup};
@@ -160,6 +169,7 @@ export class ChatComponent implements OnInit {
   });
   }
 
+//Send request to the server to make a new group
   newGroup() {
     const that = this;
     var newGroup = {newGroup:prompt("New group name?"), curUser: this.userData.name};
@@ -186,6 +196,7 @@ export class ChatComponent implements OnInit {
   });
   }
 
+//Send request to the server to add a user to a specified group
   addToGroup(){
     const that = this;
     var details = {user:prompt("Which user would you like to add to the current group?"), group:this.currentGroup};
@@ -211,6 +222,7 @@ export class ChatComponent implements OnInit {
   });
   }
 
+//Send request to the server to remove a specified user from a group
   removeUserFromGroup(){
     const that = this;
     var details = {user:prompt("Which user would you like to remove from the current group?"), group:this.currentGroup};
@@ -236,6 +248,7 @@ export class ChatComponent implements OnInit {
   });
   }
 
+//Sends a request to the server to create a new user.
   createNewUser(){
     event.preventDefault();
     var dataStuff = {username:prompt("Username?"), email:prompt("The users email?")};
@@ -260,6 +273,7 @@ export class ChatComponent implements OnInit {
   });
   }
 
+//Send a request to the server to remove a user from the system.
   removeAUser(){
     event.preventDefault();
     var dataStuff = {user:prompt("Which user would you like to remove for good?")};
@@ -284,6 +298,8 @@ export class ChatComponent implements OnInit {
   });
   }
 
+//Sends request to the server to update a users level of permissions to
+//the level of group admin
   setGroupAdmin(){
     event.preventDefault();
     var dataStuff = {user:prompt("Which user would you like to become a group admin?"), group:this.currentGroup};
@@ -308,6 +324,8 @@ export class ChatComponent implements OnInit {
   });
   }
 
+//Sends reqest to the server to update the users permissons
+// to the level of super admin
   setAdmin(){
     event.preventDefault();
     var dataStuff = {user:prompt("Which user would you like to promote to a super admin?")};
@@ -333,6 +351,7 @@ export class ChatComponent implements OnInit {
 
   }
 
+//Send request to the server to remove a group from the system
   removeGroup(){
     event.preventDefault();
     const that = this;
@@ -365,6 +384,7 @@ export class ChatComponent implements OnInit {
 
   }
 
+//Sends request to the server to remove a channel in the specifed group
   removeChannel(){
     event.preventDefault();
     const that = this;

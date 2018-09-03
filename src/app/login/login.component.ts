@@ -17,15 +17,14 @@ import * as $ from 'jquery';
 
 export class LoginComponent implements OnInit {
 
-username:string = '';
-RegUsername:string = '';
-email:string = '';
+username:string = ''; //NGModel for the username that is entered
 
   constructor(private router:Router, private form:FormsModule, private http:HttpClient) {  }
 
   ngOnInit() {
   }
 
+//Sends request to the server to authenticate a given user name
   userLogin(event) {
     event.preventDefault();
     var dataStuff = {username:this.username};
@@ -54,31 +53,4 @@ email:string = '';
 
   });
   }
-
-
-  userRegister(event) {
-    event.preventDefault();
-    var dataStuff = {username:this.username, email:this.email};
-
-    $(document).ready(function() {
-    $.ajax({
-      type:"POST",
-      contentType:"application/json",
-      url:"/register",
-      data:JSON.stringify(dataStuff),
-      datatype:"JSON",
-      success:function(userInfo){
-        if(userInfo) {
-          alert("You've been registered!");
-        } else {
-        alert("Sorry! Looks like that username is already taken! Or maybe our register system just failed..");
-
-        }
-    },
-      error:function(e){alert("Registration Failed")},
-    });
-  });
-  }
-
-
 }

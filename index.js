@@ -1,3 +1,4 @@
+////////Establish the server////////
 const express = require('express');
 const app = express();
 const path = require('path');
@@ -13,16 +14,20 @@ app.use(bodyParser.json());
 require('./socket.js')(app, io, fs);
 require('./auth.js')(app,fs);
 require('./register.js')(app,fs);
+////////Establish the server////////
 
+//Sends back the view for the angular components
 app.get('/*', function(req,res) {
   res.sendFile(__dirname + '/dist/ChatApplicaton/index.html')
 });
 
+//Is called when the user asks for their groups channels
 app.post('/getGroups', function(req, res) {
 
       var channelList;
       var groupName = req.body.groupName;
 
+//Read from storage and store the users channels
       fs.readFile('channel&Groups.json', 'utf-8', function(err,data){
 
         if(err) {
@@ -31,25 +36,26 @@ app.post('/getGroups', function(req, res) {
 
         } else {
           channelList = JSON.parse(data);
-          //channelList.exists = false;
           for(let i = 0;i < channelList.length;i++){
             if(channelList[i].gName == groupName) {
-              //channelList[i].exists = true;
+//Send the channels back to the user
               res.send(channelList[i]);
               return;
             }
           }
         }
 
-        //res.send(channelList);
       });
 })
 
+//Is called when a user wishs to change groups
 app.post('/changeGroup', function(req, res) {
 
       var channelList;
       var groupName = req.body.group;
 
+//Retrieve the users groups and then send them the updated channel list
+// for that group
       fs.readFile('channel&Groups.json', 'utf-8', function(err,data){
 
         if(err) {
@@ -58,28 +64,24 @@ app.post('/changeGroup', function(req, res) {
 
         } else {
           channelList = JSON.parse(data);
-          //channelList.exists = false;
           for(let i = 0;i < channelList.length;i++){
             if(channelList[i].gName == groupName) {
-              //channelList[i].exists = true;
               res.send(channelList[i]);
               return;
             }
           }
         }
 
-        //res.send(channelList);
       });
 })
 
+//Called when a user wishs to create a new room
 app.post('/newRoom', function(req,res) {
-  //console.log("Entered new room");
   fs.readFile('channel&Groups.json', 'utf-8', function(err,data){
 
-    var groupsInfo;
-    var newRoom = req.body.newRoom;
-    var curGroup = req.body.curGroup;
-    console.log(newRoom, curGroup);
+    var groupsInfo; //Info for the group
+    var newRoom = req.body.newRoom; //New room name
+    var curGroup = req.body.curGroup; //Group that the room will be made in
 
     if(err) {
 
@@ -90,31 +92,28 @@ app.post('/newRoom', function(req,res) {
       for(let i = 0;i < groupsInfo.length;i++){
         if(groupsInfo[i].gName == curGroup) {
           groupsInfo[i].channels.push(newRoom);
-          console.log("pushed new channel " +newRoom);
-          console.log(groupsInfo[i].channels);
         }
       }
       var newData = JSON.stringify(groupsInfo);
-      console.log("New Data " + newData);
       fs.writeFile('channel&Groups.json', newData, 'utf-8', function(err) {
 
         if (err) {
           console.log(err);
         }
-        console.log("A new room was created in the group " + newRoom);
-        res.send(newRoom);
-        //socket.emit('message', {type:'message', text:'SERVER: A new channel has been created: '+ newRoom});
+        res.send(newRoom); //Once the file has been updated the newRoom
+                           // is send back to the user
       });
      }
 
   });
 })
 
+//Is called when the user wishs to create a new group
 app.post('/newGroup', function(req,res) {
-  var groupsInfo;
-  var newGroup = req.body.newGroup;
-  var curUser = req.body.curUser;
-  var isGroup;
+  var groupsInfo; //Groups object storage
+  var newGroup = req.body.newGroup; //New groups name
+  var curUser = req.body.curUser; //User who created the group
+  var isGroup; //Value for determining if the group already exists
   fs.readFile('channel&Groups.json', 'utf-8', function(err,data){
 
     console.log(newGroup);
@@ -123,16 +122,17 @@ app.post('/newGroup', function(req,res) {
       console.log(err);
     } else {
       groupsInfo = JSON.parse(data);
-      for(let i = 0;i < groupsInfo.length; i++) {
+      for(let i = 0;i < groupsInfo.length; i++) { //Checks if the group already exists
         if(groupsInfo[i].gName == newGroup){
           isGroup = 1;
         }
       }
-      if(isGroup > 0){
+      if(isGroup > 0){ //Informs the user the group already exists
         res.send(alert("Group may already exist"));
         console.log("Group creation failed");
 
-      } else {
+      } else { //Add the group to the groups data and tell the user
+               // the group was made successfully
         groupsInfo.push({"gName":newGroup,"channels":[],"admins":[curUser]});
         var newData = JSON.stringify(groupsInfo);
 
@@ -146,15 +146,16 @@ app.post('/newGroup', function(req,res) {
       }
      }
   });
+  //Pulls the data of the user that made the group
   fs.readFile('authdata.json', 'utf-8', function(err,data){
     var userData;
     if(err) {
       console.log(err);
     } else {
       userData = JSON.parse(data);
-      for(let i = 0;i < userData.length; i++) {
-        if(userData[i].name == curUser){
-          userData[i].groups.push(newGroup);
+      for(let i = 0;i < userData.length; i++) { //Find the user and then adds
+        if(userData[i].name == curUser){        // the new group to the list of
+          userData[i].groups.push(newGroup);    // groups that user is in.
           console.log(userData[i]);
         }
       }
@@ -169,18 +170,19 @@ app.post('/newGroup', function(req,res) {
 
 })
 
+//Called when a user wishs to add a user to a group
 app.post('/addToGroup', function(req, res) {
-  var newGroup = req.body.group;
-  var curUser = req.body.user;
+  var newGroup = req.body.group; //Group name
+  var curUser = req.body.user; //User being added
 
-  fs.readFile('authdata.json', 'utf-8', function(err,data){
+  fs.readFile('authdata.json', 'utf-8', function(err,data){ //Pull user data
     var userData;
     if(err) {
       console.log(err);
     } else {
       userData = JSON.parse(data);
-      for(let i = 0;i < userData.length; i++) {
-        if(userData[i].name == curUser){
+      for(let i = 0;i < userData.length; i++) { //Find user and add new group
+        if(userData[i].name == curUser){        // to their groups list
           userData[i].groups.push(newGroup);
           console.log(userData[i]);
         }
@@ -189,7 +191,7 @@ app.post('/addToGroup', function(req, res) {
       console.log(newData);
       fs.writeFile('authdata.json', newData ,'utf-8', function(err) {
         if (err) throw err;
-        res.send(true);
+        res.send(true); // Confirm the user was added to the group
 
 
       })
@@ -197,18 +199,19 @@ app.post('/addToGroup', function(req, res) {
   });
 })
 
+//Called when a user is removed from a group
 app.post('/removeUserFromGroup', function(req, res) {
-  var newGroup = req.body.group;
-  var curUser = req.body.user;
+  var newGroup = req.body.group; //Group name
+  var curUser = req.body.user;   //the user being removed
 
-  fs.readFile('authdata.json', 'utf-8', function(err,data){
+  fs.readFile('authdata.json', 'utf-8', function(err,data){ //Retrieve user data
     var userData;
     if(err) {
       console.log(err);
     } else {
       userData = JSON.parse(data);
-      for(let i = 0;i < userData.length; i++) {
-        if(userData[i].name == curUser){
+      for(let i = 0;i < userData.length; i++) { // Find the group in the users current groups
+        if(userData[i].name == curUser){        // and remove it
           var userGroups = userData[i].groups
           for(let b = 0; b < userGroups.length; b++){
             if(userGroups[b] == newGroup) {
@@ -222,7 +225,7 @@ app.post('/removeUserFromGroup', function(req, res) {
       fs.writeFile('authdata.json', newData ,'utf-8', function(err) {
         if (err) throw err;
         console.log("Written to file");
-        res.send(true);
+        res.send(true); //Inform the user that the user was removed from the group
 
 
       })
@@ -230,43 +233,44 @@ app.post('/removeUserFromGroup', function(req, res) {
   });
 })
 
+//Called to remove a user from the system
 app.post('/removeUser', function(req, res) {
-  var user = req.body.user;
-  fs.readFile('authdata.json', 'utf-8', function(err,data) {
+  var user = req.body.user; //Name of user
+  fs.readFile('authdata.json', 'utf-8', function(err,data) { //Retrieve user data
     var userData;
     if(err) {
       console.log(err);
     } else {
       userData = JSON.parse(data);
 
-      for(let i = 0; i < userData.length; i++){
-        if(userData[i].name == user){
+      for(let i = 0; i < userData.length; i++){ //Find user in the users list
+        if(userData[i].name == user){           // and remove them
           userData.splice(i, 1);
         }
       }
       var newData = JSON.stringify(userData);
       fs.writeFile('authdata.json', newData, 'utf-8', function(err) {
         if(err) throw err;
-        res.send(true);
+        res.send(true); // Return successfully removed
       });
     }
   });
 })
 
-
+// Called when setting a user as a group admin
   app.post('/setGroupAdmin', function(req, res) {
-    var user = req.body.user;
-    var group = req.body.group;
+    var user = req.body.user; //Name of user
+    var group = req.body.group; //Name of group they are becoming admin of
 
-    fs.readFile('channel&Groups.json', 'utf-8', function(err,data) {
+    fs.readFile('channel&Groups.json', 'utf-8', function(err,data) { //Retrieve group info
       var groupData;
       if(err) {
         console.log(err);
       } else {
         groupData = JSON.parse(data);
 
-        for(let i = 0; i < groupData.length; i++) {
-          if(groupData[i].gName == group) {
+        for(let i = 0; i < groupData.length; i++) { //Find the group and append
+          if(groupData[i].gName == group) {         // the user to the list of admins
             groupData[i].admins.push(user);
           }
         }
@@ -275,15 +279,15 @@ app.post('/removeUser', function(req, res) {
           if(err) throw err;
           //res.send(true);
         });
-        fs.readFile('authdata.json', 'utf-8', function(err,data) {
+        fs.readFile('authdata.json', 'utf-8', function(err,data) { // Retrieve user data
           var userData;
           if(err) {
             console.log(err);
           } else {
             userData = JSON.parse(data);
 
-            for (let i = 0; i < userData.length; i++) {
-              if(userData[i].name == user) {
+            for (let i = 0; i < userData.length; i++) { // Find user and update there
+              if(userData[i].name == user) {            // permissions to group admin
                 if(userData[i].permissions !== 3) {
                   userData[i].permissions = 2;
                 }
@@ -292,7 +296,7 @@ app.post('/removeUser', function(req, res) {
             var newData = JSON.stringify(userData);
             fs.writeFile('authdata.json', newData, 'utf-8', function(err, data) {
               if(err) throw err;
-              res.send(true);
+              res.send(true); // Return success
             })
           }
         })
@@ -300,42 +304,44 @@ app.post('/removeUser', function(req, res) {
     })
   })
 
+//Called when setting a user to a super admin
   app.post('/setAdmin',function(req, res) {
-    var user = req.body.user;
+    var user = req.body.user; //Users name
 
-    fs.readFile('authdata.json', "utf-8", function(err,data) {
+    fs.readFile('authdata.json', "utf-8", function(err,data) { //Retrieve user data
       var userData;
       if(err) {
         console.log(err);
       } else {
         userData = JSON.parse(data);
 
-        for(let i = 0; i < userData.length; i++) {
-          if(userData[i].name == user) {
-            userData[i].permissions = 3;
+        for(let i = 0; i < userData.length; i++) { //Find the user in the user data
+          if(userData[i].name == user) {           // and update there permissiosn to
+            userData[i].permissions = 3;           // group admin
           }
         }
         var newData = JSON.stringify(userData);
         fs.writeFile('authdata.json', newData, 'utf-8', function(err, data) {
           if(err) throw err;
-          res.send(true);
+          res.send(true); // Return true
         })
       }
     })
   })
 
+//Called when removing and group from the system
   app.post('/removeGroup', function(req, res) {
-    var group = req.body.group;
+    var group = req.body.group; //Name of the group
 
-    fs.readFile('channel&Groups.json', 'utf-8', function(err,data) {
+    fs.readFile('channel&Groups.json', 'utf-8', function(err,data) { //Retrieve group data
       var groupData;
       if(err) {
         console.log(err);
       } else {
         groupData = JSON.parse(data);
 
-        for(let i = 0; i < groupData.length; i++) {
-          if(groupData[i].gName == group) {
+        for(let i = 0; i < groupData.length; i++) { //Find the groups data, and remove
+          if(groupData[i].gName == group) {         // from the group data object
             groupData.splice(i, 1);
           }
         }
@@ -346,17 +352,17 @@ app.post('/removeUser', function(req, res) {
         })
       }
     })
-    fs.readFile('authdata.json', 'utf-8', function(err,data) {
+    fs.readFile('authdata.json', 'utf-8', function(err,data) { //Retrieve user data
       var userData;
       if(err) {
         console.log(err);
       } else {
         userData = JSON.parse(data);
 
-        for(let i = 0; i < userData.length; i++) {
-          var userGroups = userData[i];
-          for(let c = 0; c < userGroups.groups.length; c++) {
-            if(userGroups.groups[c] == group){
+        for(let i = 0; i < userData.length; i++) { //Search through each users data and
+          var userGroups = userData[i];            // remove the group that was deleted
+          for(let c = 0; c < userGroups.groups.length; c++) { // from any user that was a member
+            if(userGroups.groups[c] == group){     //of that group
               userGroups.groups.splice(c, 1);
               userData[i] = userGroups;
             }
@@ -365,26 +371,27 @@ app.post('/removeUser', function(req, res) {
         var newData = JSON.stringify(userData);
         fs.writeFile('authdata.json', newData, 'utf-8', function(err,data) {
           if(err) throw err;
-          res.send(true);
+          res.send(true); // Return success
         })
 
       }
     })
   })
 
+//Called when removing a channel from a group
   app.post('/removeChannel', function(req, res) {
-    var group = req.body.group;
-    var channel = req.body.channel;
+    var group = req.body.group; // Name of the group
+    var channel = req.body.channel; // Name of the channel to be removed
 
-    fs.readFile('channel&Groups.json', 'utf-8', function(err, data) {
+    fs.readFile('channel&Groups.json', 'utf-8', function(err, data) { //Pull group data
       var groupInfo;
       if(err) {
         console.log(err);
       } else {
         groupData = JSON.parse(data);
-        for(let i = 0; i < groupData.length; i++) {
-          if(groupData[i].gName == group){
-            var chGroup = groupData[i];
+        for(let i = 0; i < groupData.length; i++) { //Find the groups data in the object
+          if(groupData[i].gName == group){          // and remove that channel from the
+            var chGroup = groupData[i];             // channels list
             for(let c = 0; i < chGroup.channels.length; c++) {
               if(chGroup.channels[c] == channel){
                 chGroup.channels.splice(c, 1);
@@ -396,13 +403,13 @@ app.post('/removeUser', function(req, res) {
         var newData = JSON.stringify(groupData);
         fs.writeFile('channel&Groups.json', newData, 'utf-8', function(err, data) {
           if(err) throw err;
-          res.send(true);
+          res.send(true); //Return true
         })
       }
     })
   })
 
-//NO GO ZONE
+//Makes the server listen for any request to port 3000
 http.listen(3000,() => {
   console.log("Server Started...");
 });
