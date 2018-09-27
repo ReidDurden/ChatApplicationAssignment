@@ -1,1 +1,1 @@
-[{"name":"super","email":"super@email.com","permissions":3,"groups":["Global"]}]
+[{"name":"super","email":"super@email.com","permissions":3,"groups":["Global","newGroup"]},{"name":"newUser","email":"user@gakdsfsja","permissions":1,"groups":["global","Global"]},{"name":"NewUser","email":"user@email.com","permissions":1,"groups":["global"]}]

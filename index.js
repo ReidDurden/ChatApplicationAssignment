@@ -12,14 +12,99 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 require('./socket.js')(app, io, fs);
-require('./auth.js')(app,fs);
+//require('./auth.js')(app,fs);
 require('./register.js')(app,fs);
+var dbF = require('./dbFunctions.js')
+
+const MongoClient = require('mongodb').MongoClient;
+const url = 'mongodb://localhost:27017';
+var mongod;
+
+
+MongoClient.connect(url, {poolSize:10}, function(err,client) {
+  if (err) {return console.log(err)}
+  const dbName = 'ChatApp';
+  const db = client.db(dbName);
+  mongod = db;
+
+  dbF.DBinit(db).then(result=>{
+      console.log("Completed");
+    })
+});
+
+
+http.listen(3000,() => {
+  console.log("Server Started...");
+});
 ////////Establish the server////////
 
 //Sends back the view for the angular components
 app.get('/*', function(req,res) {
   res.sendFile(__dirname + '/dist/ChatApplicaton/index.html')
 });
+
+//
+app.post('/auth', (req,res) => {
+
+  var uname = req.body.username;
+
+  var userObj = dbF.FindRecord(mongod, uname).then(result=>{
+    if(result != null){
+      res.send(result)
+
+    } else {
+      console.log("There was no result found sorry.");
+      res.send(false);
+    }
+
+  });
+  });
+
+  app.post('/register', (req, res) => {
+
+    var isUser = 0;
+    var userObj;
+    var uname = req.body.username;
+    var uemail = req.body.email;
+
+    var userObj = dbF.FindRecord(mongod, uname).then(result=> {
+      if(result != null) {
+        dbF.AddUser(db, userObj);
+        res.send(true);
+      } else {
+        res.send(false);
+        console.log("The user registration failed");
+      }
+    })
+
+    fs.readFile('authdata.json', 'utf-8', function(err,data) {
+      if(err) {
+        console.log(err);
+      } else {
+        userObj = JSON.parse(data);
+        for(let i = 0;i < userObj.length; i++) {
+          if(userObj[i].name == uname){
+            isUser = 1;
+          }
+        }
+        if(isUser > 0){
+          userObj.status = false;
+          res.send(userObj.status);
+          console.log("The user registration failed");
+        } else {
+          userObj.push({"name":uname,"email":uemail, "permissions":1, "groups":["global"]});
+          var newData = JSON.stringify(userObj);
+          fs.writeFile('authdata.json', newData, 'utf-8', function(err) {
+            if (err) throw err;
+            console.log("registration succeeded from user: " + uname);
+            userObj.status = true;
+            res.send(userObj.status);
+          });
+        }
+      }
+    });
+  });
+
 
 //Is called when the user asks for their groups channels
 app.post('/getGroups', function(req, res) {
@@ -408,8 +493,3 @@ app.post('/removeUser', function(req, res) {
       }
     })
   })
-
-//Makes the server listen for any request to port 3000
-http.listen(3000,() => {
-  console.log("Server Started...");
-});

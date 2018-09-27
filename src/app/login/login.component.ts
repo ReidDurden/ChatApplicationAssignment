@@ -38,9 +38,10 @@ username:string = ''; //NGModel for the username that is entered
       data:JSON.stringify(dataStuff),
       datatype:"JSON",
       success:function(userInfo){
-        if(userInfo.exists) {
+        if(userInfo != false) {
           alert("Logged In!");
-          sessionStorage.setItem("userInfo", JSON.stringify(userInfo));
+          console.log(userInfo);
+          sessionStorage.setItem("userInfo", userInfo);
           that.router.navigate(['chat']);
 
         } else {
