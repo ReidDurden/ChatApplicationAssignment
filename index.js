@@ -13,7 +13,7 @@ app.use(bodyParser.json());
 
 require('./socket.js')(app, io, fs);
 //require('./auth.js')(app,fs);
-require('./register.js')(app,fs);
+//require('./register.js')(app,fs);
 var dbF = require('./dbFunctions.js')
 
 const MongoClient = require('mongodb').MongoClient;
@@ -49,7 +49,7 @@ app.post('/auth', (req,res) => {
   var uname = req.body.username;
 
   var userObj = dbF.FindRecord(mongod, uname).then(result=>{
-    if(result != null){
+    if(result != "null"){
       res.send(result)
 
     } else {
@@ -62,14 +62,13 @@ app.post('/auth', (req,res) => {
 
   app.post('/register', (req, res) => {
 
-    var isUser = 0;
-    var userObj;
     var uname = req.body.username;
     var uemail = req.body.email;
 
-    var userObj = dbF.FindRecord(mongod, uname).then(result=> {
-      if(result != null) {
-        dbF.AddUser(db, userObj);
+    var userObj = {name: uname, email:uemail};
+    var userData = dbF.FindRecord(mongod, uname).then(result=> {
+      if(result == "null") {
+        dbF.AddUser(mongod, userObj);
         res.send(true);
       } else {
         res.send(false);
@@ -77,120 +76,43 @@ app.post('/auth', (req,res) => {
       }
     })
 
-    fs.readFile('authdata.json', 'utf-8', function(err,data) {
-      if(err) {
-        console.log(err);
-      } else {
-        userObj = JSON.parse(data);
-        for(let i = 0;i < userObj.length; i++) {
-          if(userObj[i].name == uname){
-            isUser = 1;
-          }
-        }
-        if(isUser > 0){
-          userObj.status = false;
-          res.send(userObj.status);
-          console.log("The user registration failed");
-        } else {
-          userObj.push({"name":uname,"email":uemail, "permissions":1, "groups":["global"]});
-          var newData = JSON.stringify(userObj);
-          fs.writeFile('authdata.json', newData, 'utf-8', function(err) {
-            if (err) throw err;
-            console.log("registration succeeded from user: " + uname);
-            userObj.status = true;
-            res.send(userObj.status);
-          });
-        }
-      }
-    });
   });
 
 
 //Is called when the user asks for their groups channels
 app.post('/getGroups', function(req, res) {
 
-      var channelList;
       var groupName = req.body.groupName;
-
-//Read from storage and store the users channels
-      fs.readFile('channel&Groups.json', 'utf-8', function(err,data){
-
-        if(err) {
-
-          console.log(err);
-
-        } else {
-          channelList = JSON.parse(data);
-          for(let i = 0;i < channelList.length;i++){
-            if(channelList[i].gName == groupName) {
-//Send the channels back to the user
-              res.send(channelList[i]);
-              return;
-            }
-          }
-        }
-
+      var channelList = dbF.GetGroups(mongod, groupName).then(result=> {
+        res.send(result);
       });
+
+
 })
 
 //Is called when a user wishs to change groups
 app.post('/changeGroup', function(req, res) {
 
-      var channelList;
-      var groupName = req.body.group;
+  var groupName = req.body.group;
 
-//Retrieve the users groups and then send them the updated channel list
-// for that group
-      fs.readFile('channel&Groups.json', 'utf-8', function(err,data){
+  var channelList = dbF.ChangeGroups(mongod, groupName).then(result=> {
+    console.log(result);
+    res.send(result);
+  });
 
-        if(err) {
-
-          console.log(err);
-
-        } else {
-          channelList = JSON.parse(data);
-          for(let i = 0;i < channelList.length;i++){
-            if(channelList[i].gName == groupName) {
-              res.send(channelList[i]);
-              return;
-            }
-          }
-        }
-
-      });
 })
 
 //Called when a user wishs to create a new room
 app.post('/newRoom', function(req,res) {
-  fs.readFile('channel&Groups.json', 'utf-8', function(err,data){
 
     var groupsInfo; //Info for the group
     var newRoom = req.body.newRoom; //New room name
     var curGroup = req.body.curGroup; //Group that the room will be made in
 
-    if(err) {
+    var room = dbF.NewRoom(mongod, curGroup, newRoom).then(result=> {
+      res.send(newRoom);
+    });
 
-      console.log(err);
-
-    } else {
-      groupsInfo = JSON.parse(data);
-      for(let i = 0;i < groupsInfo.length;i++){
-        if(groupsInfo[i].gName == curGroup) {
-          groupsInfo[i].channels.push(newRoom);
-        }
-      }
-      var newData = JSON.stringify(groupsInfo);
-      fs.writeFile('channel&Groups.json', newData, 'utf-8', function(err) {
-
-        if (err) {
-          console.log(err);
-        }
-        res.send(newRoom); //Once the file has been updated the newRoom
-                           // is send back to the user
-      });
-     }
-
-  });
 })
 
 //Is called when the user wishs to create a new group
@@ -198,148 +120,50 @@ app.post('/newGroup', function(req,res) {
   var groupsInfo; //Groups object storage
   var newGroup = req.body.newGroup; //New groups name
   var curUser = req.body.curUser; //User who created the group
-  var isGroup; //Value for determining if the group already exists
-  fs.readFile('channel&Groups.json', 'utf-8', function(err,data){
 
-    console.log(newGroup);
-
-    if(err) {
-      console.log(err);
+  var newGroupTemp = dbF.CreateNewGroup(mongod, newGroup, curUser).then(result=> {
+    if(result == false){
+      res.send(alert("Group may already exist"));
     } else {
-      groupsInfo = JSON.parse(data);
-      for(let i = 0;i < groupsInfo.length; i++) { //Checks if the group already exists
-        if(groupsInfo[i].gName == newGroup){
-          isGroup = 1;
-        }
-      }
-      if(isGroup > 0){ //Informs the user the group already exists
-        res.send(alert("Group may already exist"));
-        console.log("Group creation failed");
 
-      } else { //Add the group to the groups data and tell the user
-               // the group was made successfully
-        groupsInfo.push({"gName":newGroup,"channels":[],"admins":[curUser]});
-        var newData = JSON.stringify(groupsInfo);
-
-        fs.writeFile('channel&Groups.json', newData, 'utf-8', function(err) {
-
-          if (err) throw err;
-          console.log("New Group created: " + newGroup);
-          res.send(newGroup);
-
-        });
-      }
-     }
-  });
-  //Pulls the data of the user that made the group
-  fs.readFile('authdata.json', 'utf-8', function(err,data){
-    var userData;
-    if(err) {
-      console.log(err);
-    } else {
-      userData = JSON.parse(data);
-      for(let i = 0;i < userData.length; i++) { //Find the user and then adds
-        if(userData[i].name == curUser){        // the new group to the list of
-          userData[i].groups.push(newGroup);    // groups that user is in.
-          console.log(userData[i]);
-        }
-      }
-      var newData = JSON.stringify(userData);
-      console.log(newData);
-      fs.writeFile('authdata.json', newData ,'utf-8', function(err) {
-        if (err) throw err;
-
+      dbF.AddToGroup(mongod, newGroup, curUser).then(returnedVal=> {
+        res.send(newGroup);
       })
     }
-  });
+  })
 
 })
 
 //Called when a user wishs to add a user to a group
 app.post('/addToGroup', function(req, res) {
-  var newGroup = req.body.group; //Group name
-  var curUser = req.body.user; //User being added
+  var group = req.body.group; //Group name
+  var user = req.body.user; //User being added
 
-  fs.readFile('authdata.json', 'utf-8', function(err,data){ //Pull user data
-    var userData;
-    if(err) {
-      console.log(err);
-    } else {
-      userData = JSON.parse(data);
-      for(let i = 0;i < userData.length; i++) { //Find user and add new group
-        if(userData[i].name == curUser){        // to their groups list
-          userData[i].groups.push(newGroup);
-          console.log(userData[i]);
-        }
-      }
-      var newData = JSON.stringify(userData);
-      console.log(newData);
-      fs.writeFile('authdata.json', newData ,'utf-8', function(err) {
-        if (err) throw err;
-        res.send(true); // Confirm the user was added to the group
+  dbF.AddToGroup(mongod, group, user).then(result=> {
+    res.send(true);
+  })
 
-
-      })
-    }
-  });
 })
 
 //Called when a user is removed from a group
 app.post('/removeUserFromGroup', function(req, res) {
-  var newGroup = req.body.group; //Group name
-  var curUser = req.body.user;   //the user being removed
+  var group = req.body.group; //Group name
+  var user = req.body.user;   //the user being removed
 
-  fs.readFile('authdata.json', 'utf-8', function(err,data){ //Retrieve user data
-    var userData;
-    if(err) {
-      console.log(err);
-    } else {
-      userData = JSON.parse(data);
-      for(let i = 0;i < userData.length; i++) { // Find the group in the users current groups
-        if(userData[i].name == curUser){        // and remove it
-          var userGroups = userData[i].groups
-          for(let b = 0; b < userGroups.length; b++){
-            if(userGroups[b] == newGroup) {
-              userGroups.splice(b, 1);
-            }
-          }
-          userData[i].groups = userGroups;
-        }
-      }
-      var newData = JSON.stringify(userData);
-      fs.writeFile('authdata.json', newData ,'utf-8', function(err) {
-        if (err) throw err;
-        console.log("Written to file");
-        res.send(true); //Inform the user that the user was removed from the group
+  dbF.RemoveFromGroup(mongod, group, user).then(result=> {
+    res.send(true);
+  })
 
-
-      })
-    }
-  });
 })
 
 //Called to remove a user from the system
 app.post('/removeUser', function(req, res) {
   var user = req.body.user; //Name of user
-  fs.readFile('authdata.json', 'utf-8', function(err,data) { //Retrieve user data
-    var userData;
-    if(err) {
-      console.log(err);
-    } else {
-      userData = JSON.parse(data);
 
-      for(let i = 0; i < userData.length; i++){ //Find user in the users list
-        if(userData[i].name == user){           // and remove them
-          userData.splice(i, 1);
-        }
-      }
-      var newData = JSON.stringify(userData);
-      fs.writeFile('authdata.json', newData, 'utf-8', function(err) {
-        if(err) throw err;
-        res.send(true); // Return successfully removed
-      });
-    }
-  });
+  dbF.RemoveUser(mongod, user).then(result=> {
+    res.send(true);
+  })
+  
 })
 
 // Called when setting a user as a group admin
