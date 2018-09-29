@@ -30,6 +30,8 @@ MongoClient.connect(url, {poolSize:10}, function(err,client) {
   dbF.DBinit(db).then(result=>{
       console.log("Completed");
     })
+
+
 });
 
 
@@ -163,128 +165,54 @@ app.post('/removeUser', function(req, res) {
   dbF.RemoveUser(mongod, user).then(result=> {
     res.send(true);
   })
-  
+
 })
 
 // Called when setting a user as a group admin
   app.post('/setGroupAdmin', function(req, res) {
     var user = req.body.user; //Name of user
     var group = req.body.group; //Name of group they are becoming admin of
+    var permissionsLevel = 2;
 
-    fs.readFile('channel&Groups.json', 'utf-8', function(err,data) { //Retrieve group info
-      var groupData;
-      if(err) {
-        console.log(err);
-      } else {
-        groupData = JSON.parse(data);
+    dbF.SetAdmin(mongod, user, permissionsLevel).then(result=> {
+      //res.send(true);
+      dbF.SetGroupAdmin(mongod, user, group).then(success => {
+        res.send(true);
+      })
 
-        for(let i = 0; i < groupData.length; i++) { //Find the group and append
-          if(groupData[i].gName == group) {         // the user to the list of admins
-            groupData[i].admins.push(user);
-          }
-        }
-        var newData = JSON.stringify(groupData);
-        fs.writeFile('channel&Groups.json', newData,'utf-8', function(err, data) {
-          if(err) throw err;
-          //res.send(true);
-        });
-        fs.readFile('authdata.json', 'utf-8', function(err,data) { // Retrieve user data
-          var userData;
-          if(err) {
-            console.log(err);
-          } else {
-            userData = JSON.parse(data);
-
-            for (let i = 0; i < userData.length; i++) { // Find user and update there
-              if(userData[i].name == user) {            // permissions to group admin
-                if(userData[i].permissions !== 3) {
-                  userData[i].permissions = 2;
-                }
-              }
-            }
-            var newData = JSON.stringify(userData);
-            fs.writeFile('authdata.json', newData, 'utf-8', function(err, data) {
-              if(err) throw err;
-              res.send(true); // Return success
-            })
-          }
-        })
-      }
     })
+
   })
 
 //Called when setting a user to a super admin
   app.post('/setAdmin',function(req, res) {
     var user = req.body.user; //Users name
+    console.log(user);
+    var permissionsLevel = 3;
 
-    fs.readFile('authdata.json', "utf-8", function(err,data) { //Retrieve user data
-      var userData;
-      if(err) {
-        console.log(err);
-      } else {
-        userData = JSON.parse(data);
-
-        for(let i = 0; i < userData.length; i++) { //Find the user in the user data
-          if(userData[i].name == user) {           // and update there permissiosn to
-            userData[i].permissions = 3;           // group admin
-          }
-        }
-        var newData = JSON.stringify(userData);
-        fs.writeFile('authdata.json', newData, 'utf-8', function(err, data) {
-          if(err) throw err;
-          res.send(true); // Return true
-        })
-      }
+    dbF.SetAdmin(mongod, user, permissionsLevel).then(result=> {
+      res.send(true);
     })
+
   })
 
 //Called when removing and group from the system
   app.post('/removeGroup', function(req, res) {
     var group = req.body.group; //Name of the group
 
-    fs.readFile('channel&Groups.json', 'utf-8', function(err,data) { //Retrieve group data
-      var groupData;
-      if(err) {
-        console.log(err);
-      } else {
-        groupData = JSON.parse(data);
-
-        for(let i = 0; i < groupData.length; i++) { //Find the groups data, and remove
-          if(groupData[i].gName == group) {         // from the group data object
-            groupData.splice(i, 1);
-          }
-        }
-        var newData = JSON.stringify(groupData);
-        fs.writeFile('channel&Groups.json', newData, 'utf-8', function(err, data) {
-          if(err) throw err;
-          //res.send(true);
-        })
+    dbF.RemoveGroup(mongod, group). then(result=> {
+      console.log(result.length);
+      console.log("Above is the users");
+      for(var i = 0; i < result.length; i++) {
+        console.log("ENTER THE LOOP");
+        dbF.RemoveFromGroup(mongod, group, result[i]).then(res=> {
+          console.log("Group was removed from a user");
+        });
       }
+      console.log("The group has been erased");
     })
-    fs.readFile('authdata.json', 'utf-8', function(err,data) { //Retrieve user data
-      var userData;
-      if(err) {
-        console.log(err);
-      } else {
-        userData = JSON.parse(data);
-
-        for(let i = 0; i < userData.length; i++) { //Search through each users data and
-          var userGroups = userData[i];            // remove the group that was deleted
-          for(let c = 0; c < userGroups.groups.length; c++) { // from any user that was a member
-            if(userGroups.groups[c] == group){     //of that group
-              userGroups.groups.splice(c, 1);
-              userData[i] = userGroups;
-            }
-          }
-        }
-        var newData = JSON.stringify(userData);
-        fs.writeFile('authdata.json', newData, 'utf-8', function(err,data) {
-          if(err) throw err;
-          res.send(true); // Return success
-        })
-
-      }
-    })
+    console.log("RES TRUE");
+    res.send(true);
   })
 
 //Called when removing a channel from a group
@@ -292,6 +220,12 @@ app.post('/removeUser', function(req, res) {
     var group = req.body.group; // Name of the group
     var channel = req.body.channel; // Name of the channel to be removed
 
+    dbF.RemoveRoom(mongod, group, channel).then(result=> {
+      console.log("Removed Channel");
+      res.send(true);
+    })
+
+/*
     fs.readFile('channel&Groups.json', 'utf-8', function(err, data) { //Pull group data
       var groupInfo;
       if(err) {
@@ -315,5 +249,5 @@ app.post('/removeUser', function(req, res) {
           res.send(true); //Return true
         })
       }
-    })
+    }) */
   })
