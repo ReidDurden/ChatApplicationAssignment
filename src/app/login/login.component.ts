@@ -18,6 +18,7 @@ import * as $ from 'jquery';
 export class LoginComponent implements OnInit {
 
 username:string = ''; //NGModel for the username that is entered
+password:string = '';
 
   constructor(private router:Router, private form:FormsModule, private http:HttpClient) {  }
 
@@ -27,7 +28,7 @@ username:string = ''; //NGModel for the username that is entered
 //Sends request to the server to authenticate a given user name
   userLogin(event) {
     event.preventDefault();
-    var dataStuff = {username:this.username};
+    var dataStuff = {username:this.username, password:this.password};
     const that = this;
 
     $(document).ready(function() {

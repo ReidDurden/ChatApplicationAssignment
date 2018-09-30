@@ -27,12 +27,12 @@ export class SocketService {
   }
 
 
-  sendMessage(message) {
-    this.socket.emit('add-message', message);
+  sendMessage(message, username) {
+    this.socket.emit('add-message', message, username);
   }
 
-  joinRoom(room) {
-    this.socket.emit('join-room', room);
+  joinRoom(room, user) {
+    this.socket.emit('join-room', room, user);
   }
 
   newRoom(roomname, group) {

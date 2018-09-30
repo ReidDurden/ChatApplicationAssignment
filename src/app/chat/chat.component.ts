@@ -27,6 +27,8 @@ export class ChatComponent implements OnInit {
   isNorm = false;
   isGroupAdmin = false;    //Various user permissions
   isSuperAdmin = false;
+  userAvatar = '';
+  //senderAvatar = '';
 
 //Retrieves the users data and aquires all of the information that the page
 //needs to display
@@ -39,6 +41,7 @@ export class ChatComponent implements OnInit {
       this.username = this.userData.name;
       var groupSend = {groupName: this.groups[0]}
       this.currentGroup = this.groups[0];
+      this.userAvatar = this.userData.avatar;
 
 //Sets the users level of permissons
       if(this.userData.permissions == 1) {
@@ -58,6 +61,7 @@ export class ChatComponent implements OnInit {
 //Estabilish connection to socket.io service
       this.connection = this.sockServ.getMessages().subscribe(message=> {
         this.messages.push(message);
+        //this.senderAvatar = message.avatar;
         this.message = '';
 
       });
@@ -92,12 +96,56 @@ export class ChatComponent implements OnInit {
 
 //Send message through socket.io
   sendMessage(){
-    this.sockServ.sendMessage('['+ this.username +']' + this.message);
+    this.sockServ.sendMessage(' ['+ this.username +']: '  + this.message, this.username);
   }
 
 //Uses socket.io to change the room the user is emiting to
   changeRoom(room){
-    this.sockServ.joinRoom(room);
+    this.sockServ.joinRoom(room, this.username);
+  }
+
+
+  selectedFile = null;
+  onFileSelected(event){
+    this.selectedFile = event.target.files[0];
+
+
+    var reader = new FileReader();
+    reader.readAsDataURL(this.selectedFile);
+    reader.onload = (e)=> {
+      this.userAvatar = reader.result;
+
+    };
+    reader.onerror = function (error) {
+      console.log('Error: ', error);
+    };
+
+  }
+
+  onUpload(){
+    //console.log("AY BRUH YOU DID DAT THING");
+    var data = {file: this.userAvatar, user:this.username};
+    console.log(data);
+    $(document).ready(function() {
+    $.ajax({
+      type:"POST",
+      contentType:"application/json",
+      url:"/uploadFile",
+      data:JSON.stringify(data),
+      datatype:"JSON",
+      success:function(conf){
+        if(conf) {
+          alert("Your avatar was updated!");
+        } else {
+        alert("Your avatar was not updated. Something might of gone wrong.");
+
+        }
+    },
+      error:function(e){alert("Avatar update failed.")},
+    });
+
+  });
+
   }
 
 //Closes the connection when the user leaves the page
@@ -251,7 +299,7 @@ export class ChatComponent implements OnInit {
 //Sends a request to the server to create a new user.
   createNewUser(){
     event.preventDefault();
-    var dataStuff = {username:prompt("Username?"), email:prompt("The users email?")};
+    var dataStuff = {username:prompt("Username?"),password:prompt("The users password?"), email:prompt("The users email?")};
 
     $(document).ready(function() {
     $.ajax({
@@ -369,7 +417,6 @@ export class ChatComponent implements OnInit {
           for(let i = 0; i < that.groups.length; i++) {
             if(that.groups[i] == dataStuff.group) {
               that.groups.splice(i, 1);
-              return;
             }
           }
           alert("The group has been removed!");
@@ -402,7 +449,7 @@ export class ChatComponent implements OnInit {
           for(let i = 0; i < that.channels.length; i++) {
             if(that.channels[i] == dataStuff.channel) {
               that.channels.splice(i, 1);
-              return;
+
             }
           }
           alert("The channel has been removed!");

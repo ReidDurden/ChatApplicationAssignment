@@ -1,5 +1,6 @@
 <p>Please Login Below:</p>
 <form (submit)="userLogin($event)">
   <input type="username" placeholder="Username" [(ngModel)]='username' name="username" id="username">
+  <input type="password" placeholder="Password" [(ngModel)]='password' name="password" id="password">
   <button type="submit">Login</button>
 </form>

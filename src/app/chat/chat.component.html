@@ -2,12 +2,16 @@
 
   <div *ngIf="isNorm">
     <p>Permissions: None</p>
+    <p>User Avatar: <img src={{userAvatar}} height="60" width="60"/></p>
     <button (click)="logout()">Logout</button><!--COMPLETED-->
+
 
   </div>
   <ul>
   <div *ngIf="isGroupAdmin">
     <p>Permissions: Group Admin</p>
+    <p>User Avatar: <img src={{userAvatar}} height="60" width="60"/></p>
+
     <li><button (click)="newRoom()">Make a new room</button></li><!--COMPLETED-->
     <li><button (click)="newGroup()">Create a new group</button></li><!--COMPLETED-->
     <li><button (click)="removeGroup()">Delete the current group</button></li><!--COMPLETED-->
@@ -22,6 +26,8 @@
 
   <div *ngIf="isSuperAdmin">
     <p>Permissions: Super Admin<p>
+      <p>User Avatar: <img src={{userAvatar}} height="60" width="60"/></p>
+
     <button (click)="newRoom()">Make a new room</button><!--COMPLETED-->
     <button (click)="newGroup()">Create a new group</button><!--COMPLETED-->
     <button (click)="removeGroup()">Delete the current group</button><!--COMPLETED-->
@@ -55,8 +61,16 @@
 
 <div id="chatArea" class="chatArea">
   <div *ngFor="let message of messages">
-    {{ message.text}}
+    <img src={{message.avatar}} height="20" width="20"/>{{ message.text}}
   </div>
   <input [(ngModel)]="message" type="text" placeholder="Enter message here" id="message" name="message" />
   <button (click)="sendMessage(message)">Send</button>
+
+
+    <div>
+      <input type="file" (change)="onFileSelected($event)" name="uploadfile" id = "uploadfile" />
+      <button type="button" (click)="onUpload()">Upload Image</button>
+    </div>
+
+
 </div>

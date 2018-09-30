@@ -7,9 +7,11 @@ module.exports = {
             console.log(await usersCollection.countDocuments({}));
             await usersCollection.insertOne({
                 name: "super",
+                password: "admin",
                 email: "super@email.com",
                 permissions: 3,
-                groups: ["Global"]
+                groups: ["Global"],
+                avatar: ""
             })
         }
 
@@ -28,10 +30,10 @@ module.exports = {
         return;
     },
 
-    FindRecord: async function(db, user) {
+    FindRecord: async function(db, user, password) {
         const usersCollection = db.collection('users');
 
-        var query = {name: user};
+        var query = {name: user, password: password};
         let response = await usersCollection.findOne(query);
         let res = JSON.stringify(response);
         //let newV = JSON.parse(res);
@@ -41,7 +43,7 @@ module.exports = {
 
     AddUser: async function(db, userData) {
       const usersCollection = db.collection('users');
-      var newUser = {name:userData.name, email:userData.email, permissions: 3, groups:["Global"]};
+      var newUser = {name:userData.name,password: userData.password, email:userData.email, permissions: 1, groups:["Global"], avatar:""};
       await usersCollection.insertOne(newUser, function(err, res) {
        if (err) throw err;
        console.log("1 document inserted");
@@ -211,6 +213,29 @@ module.exports = {
     console.log(groupInfo);
     return;
 
+  },
+
+  AvatarUpdate: async function(db, user, avatar) {
+    const usersCollection = db.collection('users');
+
+    var query = {name: user};
+    console.log(avatar);
+    await usersCollection.update(query, {$set: {avatar: avatar}});
+    console.log("Updated avatar of " + user);
+
+    return;
+
+  },
+
+  GetAvatar: async function(db, user) {
+    const usersCollection = db.collection('users');
+
+    var query = {name: user};
+    let response = await usersCollection.findOne(query);
+    let res = JSON.stringify(response);
+    let returnVal = JSON.parse(res)
+
+    return returnVal.avatar;
   }
 
 }

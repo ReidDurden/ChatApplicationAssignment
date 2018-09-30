@@ -6,15 +6,17 @@ const http = require('http').Server(app);
 const io = require('socket.io')(http);
 const fs = require('fs');
 const bodyParser = require("body-parser");
+//const formidable = require('formidable');
 
 app.use(express.static(path.join('dist/ChatApplicaton')));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-require('./socket.js')(app, io, fs);
+//require('./socket.js')(app, io, fs);
 //require('./auth.js')(app,fs);
 //require('./register.js')(app,fs);
 var dbF = require('./dbFunctions.js')
+//require('./socket.js')(app, io, fs);
 
 const MongoClient = require('mongodb').MongoClient;
 const url = 'mongodb://localhost:27017';
@@ -26,13 +28,16 @@ MongoClient.connect(url, {poolSize:10}, function(err,client) {
   const dbName = 'ChatApp';
   const db = client.db(dbName);
   mongod = db;
+  require('./socket.js')(app, io, fs, mongod);
+
 
   dbF.DBinit(db).then(result=>{
       console.log("Completed");
     })
-
-
 });
+
+//require('./socket.js')(app, io, fs, mongod);
+
 
 
 http.listen(3000,() => {
@@ -49,8 +54,9 @@ app.get('/*', function(req,res) {
 app.post('/auth', (req,res) => {
 
   var uname = req.body.username;
+  var upass = req.body.password;
 
-  var userObj = dbF.FindRecord(mongod, uname).then(result=>{
+  var userObj = dbF.FindRecord(mongod, uname, upass).then(result=>{
     if(result != "null"){
       res.send(result)
 
@@ -66,9 +72,10 @@ app.post('/auth', (req,res) => {
 
     var uname = req.body.username;
     var uemail = req.body.email;
+    var upass = req.body.password;
 
-    var userObj = {name: uname, email:uemail};
-    var userData = dbF.FindRecord(mongod, uname).then(result=> {
+    var userObj = {name: uname, password: upass, email:uemail};
+    var userData = dbF.FindRecord(mongod, uname, upass).then(result=> {
       if(result == "null") {
         dbF.AddUser(mongod, userObj);
         res.send(true);
@@ -210,9 +217,10 @@ app.post('/removeUser', function(req, res) {
         });
       }
       console.log("The group has been erased");
+      console.log("RES TRUE");
+      res.send(true);
     })
-    console.log("RES TRUE");
-    res.send(true);
+
   })
 
 //Called when removing a channel from a group
@@ -225,29 +233,19 @@ app.post('/removeUser', function(req, res) {
       res.send(true);
     })
 
-/*
-    fs.readFile('channel&Groups.json', 'utf-8', function(err, data) { //Pull group data
-      var groupInfo;
-      if(err) {
-        console.log(err);
-      } else {
-        groupData = JSON.parse(data);
-        for(let i = 0; i < groupData.length; i++) { //Find the groups data in the object
-          if(groupData[i].gName == group){          // and remove that channel from the
-            var chGroup = groupData[i];             // channels list
-            for(let c = 0; i < chGroup.channels.length; c++) {
-              if(chGroup.channels[c] == channel){
-                chGroup.channels.splice(c, 1);
-                groupData[i] = chGroup;
-              }
-            }
-          }
-        }
-        var newData = JSON.stringify(groupData);
-        fs.writeFile('channel&Groups.json', newData, 'utf-8', function(err, data) {
-          if(err) throw err;
-          res.send(true); //Return true
-        })
-      }
-    }) */
   })
+
+  app.post('/uploadFile', function(req, res) {
+    var user = req.body.user;
+    var image = req.body.file;
+
+    console.log(req.body);
+    console.log(image);
+
+    dbF.AvatarUpdate(mongod, user, image).then(result=> {
+      console.log("Avatar has been updated");
+      res.send(true);
+    })
+
+
+})
