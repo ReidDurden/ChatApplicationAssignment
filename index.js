@@ -6,17 +6,12 @@ const http = require('http').Server(app);
 const io = require('socket.io')(http);
 const fs = require('fs');
 const bodyParser = require("body-parser");
-//const formidable = require('formidable');
 
 app.use(express.static(path.join('dist/ChatApplicaton')));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-//require('./socket.js')(app, io, fs);
-//require('./auth.js')(app,fs);
-//require('./register.js')(app,fs);
 var dbF = require('./dbFunctions.js')
-//require('./socket.js')(app, io, fs);
 
 const MongoClient = require('mongodb').MongoClient;
 const url = 'mongodb://localhost:27017';
@@ -36,7 +31,6 @@ MongoClient.connect(url, {poolSize:10}, function(err,client) {
     })
 });
 
-//require('./socket.js')(app, io, fs, mongod);
 
 
 
@@ -50,7 +44,7 @@ app.get('/*', function(req,res) {
   res.sendFile(__dirname + '/dist/ChatApplicaton/index.html')
 });
 
-//
+
 app.post('/auth', (req,res) => {
 
   var uname = req.body.username;
@@ -61,7 +55,6 @@ app.post('/auth', (req,res) => {
       res.send(result)
 
     } else {
-      console.log("There was no result found sorry.");
       res.send(false);
     }
 
@@ -75,15 +68,19 @@ app.post('/auth', (req,res) => {
     var upass = req.body.password;
 
     var userObj = {name: uname, password: upass, email:uemail};
+    if(uname == '' || uemail == '' || upass == '' || uname == null || uemail == null || upass == null) {
+      res.send(false);
+
+    } else {
     var userData = dbF.FindRecord(mongod, uname, upass).then(result=> {
       if(result == "null") {
         dbF.AddUser(mongod, userObj);
         res.send(true);
       } else {
         res.send(false);
-        console.log("The user registration failed");
       }
     })
+  }
 
   });
 
@@ -105,7 +102,6 @@ app.post('/changeGroup', function(req, res) {
   var groupName = req.body.group;
 
   var channelList = dbF.ChangeGroups(mongod, groupName).then(result=> {
-    console.log(result);
     res.send(result);
   });
 
@@ -149,7 +145,8 @@ app.post('/addToGroup', function(req, res) {
   var user = req.body.user; //User being added
 
   dbF.AddToGroup(mongod, group, user).then(result=> {
-    res.send(true);
+
+    res.send(result);
   })
 
 })
@@ -160,7 +157,7 @@ app.post('/removeUserFromGroup', function(req, res) {
   var user = req.body.user;   //the user being removed
 
   dbF.RemoveFromGroup(mongod, group, user).then(result=> {
-    res.send(true);
+    res.send(result);
   })
 
 })
@@ -182,9 +179,8 @@ app.post('/removeUser', function(req, res) {
     var permissionsLevel = 2;
 
     dbF.SetAdmin(mongod, user, permissionsLevel).then(result=> {
-      //res.send(true);
       dbF.SetGroupAdmin(mongod, user, group).then(success => {
-        res.send(true);
+        res.send(success);
       })
 
     })
@@ -194,7 +190,6 @@ app.post('/removeUser', function(req, res) {
 //Called when setting a user to a super admin
   app.post('/setAdmin',function(req, res) {
     var user = req.body.user; //Users name
-    console.log(user);
     var permissionsLevel = 3;
 
     dbF.SetAdmin(mongod, user, permissionsLevel).then(result=> {
@@ -208,16 +203,12 @@ app.post('/removeUser', function(req, res) {
     var group = req.body.group; //Name of the group
 
     dbF.RemoveGroup(mongod, group). then(result=> {
-      console.log(result.length);
-      console.log("Above is the users");
+
       for(var i = 0; i < result.length; i++) {
-        console.log("ENTER THE LOOP");
         dbF.RemoveFromGroup(mongod, group, result[i]).then(res=> {
-          console.log("Group was removed from a user");
         });
       }
-      console.log("The group has been erased");
-      console.log("RES TRUE");
+
       res.send(true);
     })
 
@@ -229,7 +220,6 @@ app.post('/removeUser', function(req, res) {
     var channel = req.body.channel; // Name of the channel to be removed
 
     dbF.RemoveRoom(mongod, group, channel).then(result=> {
-      console.log("Removed Channel");
       res.send(true);
     })
 
@@ -239,11 +229,8 @@ app.post('/removeUser', function(req, res) {
     var user = req.body.user;
     var image = req.body.file;
 
-    console.log(req.body);
-    console.log(image);
 
     dbF.AvatarUpdate(mongod, user, image).then(result=> {
-      console.log("Avatar has been updated");
       res.send(true);
     })
   })

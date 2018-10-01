@@ -4,7 +4,6 @@ module.exports = {
         db.createCollection('users', function(err, res) {});
         const usersCollection = db.collection('users');
         if (await usersCollection.countDocuments({}) == 0) {
-            console.log(await usersCollection.countDocuments({}));
             await usersCollection.insertOne({
                 name: "super",
                 password: "admin",
@@ -19,7 +18,6 @@ module.exports = {
 
         const groupsCollection = db.collection('groups');
         if (await groupsCollection.countDocuments({}) == 0) {
-            console.log(await groupsCollection.countDocuments({}));
             await groupsCollection.insertOne({
                 gName: "Global",
                 channels: ["Welcome Channel", "Announcments"],
@@ -36,18 +34,15 @@ module.exports = {
         var query = {name: user, password: password};
         let response = await usersCollection.findOne(query);
         let res = JSON.stringify(response);
-        //let newV = JSON.parse(res);
-        //console.log(newV);
+
         return res;
     },
 
     AddUser: async function(db, userData) {
       const usersCollection = db.collection('users');
       var newUser = {name:userData.name,password: userData.password, email:userData.email, permissions: 1, groups:["Global"], avatar:""};
-      await usersCollection.insertOne(newUser, function(err, res) {
-       if (err) throw err;
-       console.log("1 document inserted");
-     });
+      await usersCollection.insertOne(newUser)
+      return true;
    },
 
    GetGroups: async function(db, groupName) {
@@ -72,15 +67,18 @@ module.exports = {
      const groupsCollection = db.collection('groups');
      var query = {gName: groupName};
      let groupTemp = await groupsCollection.findOne(query);
+     if(groupTemp == null) {
+       return false;
+     } else {
      let groupInfo = JSON.stringify(groupTemp);
      let newGroupInfo = JSON.parse(groupInfo);
      newGroupInfo.channels.push(roomName);
-     console.log("This one");
-     console.log(newGroupInfo);
 
-     await groupsCollection.update(query, {$set: {channels: newGroupInfo.channels}});
+
+     await groupsCollection.updateOne(query, {$set: {channels: newGroupInfo.channels}});
 
      return newGroupInfo;
+   }
    },
 
    CreateNewGroup: async function(db, groupName, curUser) {
@@ -89,13 +87,10 @@ module.exports = {
      let groupTemp = await groupsCollection.findOne(query);
      if(groupTemp == null) {
        var newGroup = {gName: groupName, channels: [], admins:[curUser]};
-       await groupsCollection.insertOne(newGroup, function(err, res) {
-         if (err) throw err;
-          console.log("A new group was added");
-          return groupName;
-       })
+       await groupsCollection.insertOne(newGroup);
+
+        return groupName;
      } else {
-       console.log("The group may already exist.");
        return false;
      }
    },
@@ -104,13 +99,16 @@ module.exports = {
     const usersCollection = db.collection('users');
     var query = {name: user};
     let userTemp = await usersCollection.findOne(query);
+    if(userTemp == null) {
+      return false;
+    } else {
     let userJSON = JSON.stringify(userTemp);
     let userInfo = JSON.parse(userJSON);
     userInfo.groups.push(group);
-    console.log(userInfo);
-    await usersCollection.update(query, {$set: {groups: userInfo.groups}});
+    await usersCollection.updateOne(query, {$set: {groups: userInfo.groups}});
 
-    return;
+    return true;
+  }
   },
 
   RemoveFromGroup: async function(db, group, user) {
@@ -118,6 +116,9 @@ module.exports = {
 
     var query = {name: user};
     let userTemp = await usersCollection.findOne(query);
+    if(userTemp == null) {
+      return false;
+    } else {
     let userJSON = JSON.stringify(userTemp);
     let userData = JSON.parse(userJSON);
 
@@ -128,16 +129,16 @@ module.exports = {
         }
       }
     userData.groups = userGroups;
-    await usersCollection.update(query, {$set: {groups: userData.groups}});
-    return;
-
+    await usersCollection.updateOne(query, {$set: {groups: userData.groups}});
+    return true;
+  }
   },
 
   RemoveUser: async function(db, user) {
     const usersCollection = db.collection('users');
 
     var query = {name: user};
-    await usersCollection.remove(query, {justOne: true});
+    await usersCollection.deleteOne(query, {justOne: true});
     return;
 
   },
@@ -147,19 +148,20 @@ module.exports = {
 
     var query = {name: user};
     let response = await usersCollection.findOne(query);
+    if(response == null) {
+      return false;
+    } else {
     let res = JSON.stringify(response);
     let userInfo = JSON.parse(res);
 
     if(userInfo.permissions < permLvl) {
       userInfo.permissions = permLvl;
-      console.log(userInfo);
-      await usersCollection.update(query, {$set: {permissions: userInfo.permissions}})
-      return;
+      await usersCollection.updateOne(query, {$set: {permissions: userInfo.permissions}})
+      return true;
     } else {
-      console.log("The user has permissions that are greater than the new permission.");
-      return;
+      return true;
     }
-
+  }
   },
 
 
@@ -168,12 +170,17 @@ module.exports = {
 
     var query = {gName: group};
     let response = await groupsCollection.findOne(query);
+    if(response == null) {
+      return false;
+    } else {
+
     let groupJ = JSON.stringify(response);
     let groupInfo = JSON.parse(groupJ);
 
     groupInfo.admins.push(user);
-    await groupsCollection.update(query, {$set: {admins: groupInfo.admins}});
-    return;
+    await groupsCollection.updateOne(query, {$set: {admins: groupInfo.admins}});
+    return true;
+  }
   },
 
   RemoveGroup: async function(db, group) {
@@ -181,14 +188,13 @@ module.exports = {
     const usersCollection = db.collection('users');
 
     var query = {gName: group};
-    await groupsCollection.remove(query, {justOne: true});
+    await groupsCollection.deleteOne(query, {justOne: true});
 
     var users = [];
 
     await usersCollection.find({}).forEach(function(doc) {
       users.push(doc.name);
     });
-    console.log(users);
 
     return users;
 
@@ -210,8 +216,7 @@ module.exports = {
         groupInfo.channels = groupChannels;
       }
     }
-    console.log(groupInfo);
-    return;
+    return true;
 
   },
 
@@ -219,11 +224,9 @@ module.exports = {
     const usersCollection = db.collection('users');
 
     var query = {name: user};
-    console.log(avatar);
-    await usersCollection.update(query, {$set: {avatar: avatar}});
-    console.log("Updated avatar of " + user);
+    await usersCollection.updateOne(query, {$set: {avatar: avatar}});
 
-    return;
+    return true;
 
   },
 

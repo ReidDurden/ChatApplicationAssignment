@@ -79,7 +79,7 @@ export class ChatComponent implements OnInit {
             that.changeRoom(that.channels[0]);
 
           } else {
-          alert("Channels was not updated, the group may not exist.");
+          alert("Channels was not updated, the group may not exist, or there may have been a serious error.");
 
           }
       },
