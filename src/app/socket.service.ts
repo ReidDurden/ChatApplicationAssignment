@@ -31,6 +31,10 @@ export class SocketService {
     this.socket.emit('add-message', message, username);
   }
 
+  sendImage(image, username) {
+    this.socket.emit('add-image', image, username);
+  }
+
   joinRoom(room, user) {
     this.socket.emit('join-room', room, user);
   }

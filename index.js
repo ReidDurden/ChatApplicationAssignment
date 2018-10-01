@@ -246,6 +246,4 @@ app.post('/removeUser', function(req, res) {
       console.log("Avatar has been updated");
       res.send(true);
     })
-
-
-})
+  })

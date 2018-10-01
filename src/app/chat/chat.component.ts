@@ -28,7 +28,7 @@ export class ChatComponent implements OnInit {
   isGroupAdmin = false;    //Various user permissions
   isSuperAdmin = false;
   userAvatar = '';
-  //senderAvatar = '';
+  sentImage = '';
 
 //Retrieves the users data and aquires all of the information that the page
 //needs to display
@@ -119,6 +119,29 @@ export class ChatComponent implements OnInit {
     reader.onerror = function (error) {
       console.log('Error: ', error);
     };
+
+  }
+
+  chatImage = null;
+  onFileSelectedChat(event){
+    this.chatImage = event.target.files[0];
+
+
+    var reader = new FileReader();
+    reader.readAsDataURL(this.chatImage);
+    reader.onload = (e)=> {
+      this.sentImage = reader.result;
+
+    };
+    reader.onerror = function (error) {
+      console.log('Error: ', error);
+    };
+
+  }
+
+  sendImage(){
+    //this.sockServ.sendMessage(' ['+ this.username +']: '  + this.message, this.username);
+    this.sockServ.sendImage(this.sentImage, this.username);
 
   }
 

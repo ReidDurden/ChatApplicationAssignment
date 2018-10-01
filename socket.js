@@ -33,6 +33,15 @@ module.exports = function(app, io, fs, db) {
       })
     });
 
+    socket.on('add-image', (image, username)=>{
+
+      dbF.GetAvatar(db, username).then(result=> {
+        console.log("we got this far");
+        var user = "[" + username + "]: ";
+        io.sockets.in(socket.room).emit('message', {type:'message', text:user ,avatar:result, image:image})
+      })
+    });
+
   });
 
 }
