@@ -1,5 +1,10 @@
 2811ICT Assignment 1 Documentation
 
+Testing Instructions:
+Simple start 'mongod' in one process to start the mongoDB server
+Then run 'npm test' in another process whilst in the main directory of the project.
+This should run the tests.
+
 Git Repository –
 For this project Github was used for version control. When any update was made to the source code of the project, it was uploaded to the Github repository so that it could be reverted to should another update break it, or should there be a need to revert back. As this never became a necessity, there was only ever one branch that was being updated, that being the master branch. Because that there was never really any need for multiple branches in this project, only one branch was maintained and updated. For them most part it was only really used as a cloud backup and version management between devices.
 
