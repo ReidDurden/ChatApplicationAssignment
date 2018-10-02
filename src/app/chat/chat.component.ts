@@ -114,7 +114,6 @@ export class ChatComponent implements OnInit {
     success:function(chatHistory){
       console.log(chatHistory);
       if(chatHistory) {
-        alert("Chat history updated.");
         for(var i = 0; i < chatHistory.history.length; i++) {
           var message = {text:chatHistory.history[i]};
           that.messages.push(message);
