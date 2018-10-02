@@ -101,6 +101,34 @@ export class ChatComponent implements OnInit {
 
 //Uses socket.io to change the room the user is emiting to
   changeRoom(room){
+  const that = this;
+  that.messages = []
+  var data = {channel:room};
+  $(document).ready(function() {
+  $.ajax({
+    type:"POST",
+    contentType:"application/json",
+    url:"/getChatHistory",
+    data:JSON.stringify(data),
+    datatype:"JSON",
+    success:function(chatHistory){
+      console.log(chatHistory);
+      if(chatHistory) {
+        alert("Chat history updated.");
+        for(var i = 0; i < chatHistory.history.length; i++) {
+          var message = {text:chatHistory.history[i]};
+          that.messages.push(message);
+          console.log(chatHistory.history[i]);
+        }
+      } else {
+      alert("The chat history could not be retrieved.");
+
+      }
+  },
+    error:function(e){alert("Chat history retrieval failed failed.")},
+  });
+
+});
     this.sockServ.joinRoom(room, this.username);
   }
 

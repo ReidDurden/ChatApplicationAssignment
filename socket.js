@@ -27,6 +27,7 @@ module.exports = function(app, io, fs, db) {
     });
 
     socket.on('add-message', (message, username)=>{
+      dbF.AddToChannelHistory(db,socket.room, message);
 
       dbF.GetAvatar(db, username).then(result=> {
         io.sockets.in(socket.room).emit('message', {type:'message', text:message, avatar:result});

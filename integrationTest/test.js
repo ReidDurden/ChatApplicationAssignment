@@ -196,7 +196,7 @@ describe('Tests for Database Functions [dbFunctions.js]', () => {
 
   it('dbF.RemoveGroup() should return a list of users of the deleted group if it exists', function(done) {
     dbF.RemoveGroup(mongod, "NotAGroup" ).then(result=> {
-      assert.deepEqual(result, ["super"]);
+      assert.equal(result.users[0], ["super"]);
       done();
       return;
     })

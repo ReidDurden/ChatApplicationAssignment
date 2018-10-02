@@ -12,6 +12,7 @@ module.exports = {
                 groups: ["Global"],
                 avatar: ""
             })
+            console.log("Users collection defaulted");
         }
 
         db.createCollection('groups', function(err, res) {});
@@ -23,7 +24,24 @@ module.exports = {
                 channels: ["Welcome Channel", "Announcments"],
                 admins: ["super"]
             })
+            console.log("Groups collection defaulted");
         }
+
+        db.createCollection('channelHist', function(err, res) {});
+
+        const histCollection = db.collection('channelHist');
+        if (await histCollection.countDocuments({}) == 0) {
+          await histCollection.insertOne({
+            channelName:"Welcome Channel",
+            history:[]
+          })
+          await histCollection.insertOne({
+            channelName:"Announcments",
+            history:[]
+          })
+        }
+
+        console.log("Channel History collection defaulted");
 
         return;
     },
@@ -65,6 +83,8 @@ module.exports = {
 
    NewRoom: async function(db, groupName, roomName) {
      const groupsCollection = db.collection('groups');
+     const channelHist = db.collection('channelHist');
+
      var query = {gName: groupName};
      let groupTemp = await groupsCollection.findOne(query);
      if(groupTemp == null) {
@@ -74,8 +94,8 @@ module.exports = {
      let newGroupInfo = JSON.parse(groupInfo);
      newGroupInfo.channels.push(roomName);
 
-
      await groupsCollection.updateOne(query, {$set: {channels: newGroupInfo.channels}});
+     await channelHist.insertOne({channelName: roomName, history:[]});
 
      return newGroupInfo;
    }
@@ -186,8 +206,13 @@ module.exports = {
   RemoveGroup: async function(db, group) {
     const groupsCollection = db.collection('groups');
     const usersCollection = db.collection('users');
+    const channelHist = db.collection('channelHist');
 
     var query = {gName: group};
+    var channels = [];
+    await groupsCollection.find({}).forEach(function(doc) {
+      channels.push(doc.channels);
+    });
     await groupsCollection.deleteOne(query, {justOne: true});
 
     var users = [];
@@ -196,8 +221,50 @@ module.exports = {
       users.push(doc.name);
     });
 
-    return users;
+    var returnVal = {users: users, channels: channels};
 
+    return returnVal;
+
+  },
+
+  RemoveChannelHistory: async function(db, channel) {
+    const channelHist = db.collection('channelHist');
+
+    var query = {channelName:channel};
+
+    await channelHist.deleteOne(query, {justOne:true});
+    return true;
+  },
+
+  GetChannelHistory: async function(db,channel) {
+    const channelHist = db.collection('channelHist');
+
+    var query = {channelName:channel};
+
+    var response = await channelHist.findOne(query);
+    if(response == null) {
+      return false;
+    } else {
+    let chatH = JSON.stringify(response);
+    let chatHistory = JSON.parse(chatH);
+
+    return chatHistory;
+  }
+},
+
+  AddToChannelHistory: async function(db, channel, message) {
+    const channelHist = db.collection('channelHist');
+
+    var query = {channelName: channel};
+
+    let channelTemp = await channelHist.findOne(query);
+
+    let channelJSON = JSON.stringify(channelTemp);
+    let channelInfo = JSON.parse(channelJSON);
+
+    channelInfo.history.push(message);
+    await channelHist.updateOne(query, {$set: {history: channelInfo.history}});
+    return true;
   },
 
   RemoveRoom: async function(db, group, room) {

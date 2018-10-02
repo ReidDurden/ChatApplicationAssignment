@@ -202,16 +202,28 @@ app.post('/removeUser', function(req, res) {
   app.post('/removeGroup', function(req, res) {
     var group = req.body.group; //Name of the group
 
-    dbF.RemoveGroup(mongod, group). then(result=> {
+    dbF.RemoveGroup(mongod, group).then(result=> {
 
-      for(var i = 0; i < result.length; i++) {
-        dbF.RemoveFromGroup(mongod, group, result[i]).then(res=> {
+      for(var i = 0; i < result.users.length; i++) {
+        dbF.RemoveFromGroup(mongod, group, result.users[i]).then(res=> {
+        });
+      }
+      for(var i = 0; i < result.channels.length; i++) {
+        dbF.RemoveChannelHistory(mongod,result.channels[i]).then(res=> {
         });
       }
 
       res.send(true);
     })
 
+  })
+
+  app.post('/getChatHistory', function(req, res) {
+    var channel = req.body.channel;
+
+    dbF.GetChannelHistory(mongod, channel).then(result=> {
+      res.send(result);
+    })
   })
 
 //Called when removing a channel from a group
